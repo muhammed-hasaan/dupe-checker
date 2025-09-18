@@ -1,5 +1,5 @@
 const express = require('express');
-const clientPromise = require('../../lib/mongodb');
+const clientPromise = require('../mongodb');
 
 const app = express();
 

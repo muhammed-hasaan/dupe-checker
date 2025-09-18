@@ -1,6 +1,6 @@
 const express = require('express');
 const { MongoClient, ObjectId } = require('mongodb');
-const clientPromise = require('../../../../lib/mongodb');
+const clientPromise = require('../../mongodb');
 
 const app = express();
 app.use(express.json());
