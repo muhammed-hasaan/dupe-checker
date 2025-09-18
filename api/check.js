@@ -1,5 +1,5 @@
 // api/check.js
-const connectToDatabase = require('../../mongodb');
+const connectToDatabase = require('../mongodb');
 
 module.exports = async (req, res) => {
   try {

@@ -72,7 +72,7 @@
 
 // /api/numbers/index.js
 const express = require('express');
-const connectToDatabase = require('../../../mongodb'); // Adjust path if needed
+const connectToDatabase = require('../../mongodb'); // Adjust path if needed
 
 const app = express();
 app.use(express.json()); // Important for parsing JSON bodies
