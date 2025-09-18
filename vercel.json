@@ -12,38 +12,27 @@
     {
       "src": "api/check.js",
       "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/numbers",
-      "methods": ["GET", "POST"],
-      "dest": "api/numbers/index.js"
     },
     {
-      "src": "/api/numbers/:id",
-      "methods": ["GET", "PUT", "DELETE"],
-      "dest": "api/numbers/[id].js"
-    },
-    {
-      "src": "/api/check",
-      "methods": ["GET"],
-      "dest": "api/check.js"
-    },
-    {
-      "src": "/api/check/:number",
-      "methods": ["GET"],
-      "dest": "api/check.js"
-    },
-    {
-      "src": "/(.*)",
-      "status": 404,
-      "dest": "api/404.js"
+      "src": "api/404.js",
+      "use": "@vercel/node"
     }
   ],
   "rewrites": [
     {
+      "source": "/api/numbers",
+      "destination": "/api/numbers/index.js"
+    },
+    {
+      "source": "/api/numbers/:id",
+      "destination": "/api/numbers/[id].js"
+    },
+    {
       "source": "/api/check",
+      "destination": "/api/check.js"
+    },
+    {
+      "source": "/api/check/:number",
       "destination": "/api/check.js"
     }
   ],
