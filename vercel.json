@@ -1,0 +1,60 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/numbers/index.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "api/numbers/[id].js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "api/check.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/numbers",
+      "methods": ["GET", "POST"],
+      "dest": "api/numbers/index.js"
+    },
+    {
+      "src": "/api/numbers/:id",
+      "methods": ["GET", "PUT", "DELETE"],
+      "dest": "api/numbers/[id].js"
+    },
+    {
+      "src": "/api/check",
+      "methods": ["GET"],
+      "dest": "api/check.js"
+    },
+    {
+      "src": "/api/check/:number",
+      "methods": ["GET"],
+      "dest": "api/check.js"
+    },
+    {
+      "src": "/(.*)",
+      "status": 404,
+      "dest": "api/404.js"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/check",
+      "destination": "/api/check.js"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET,POST,PUT,DELETE,OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type,Authorization" }
+      ]
+    }
+  ]
+}

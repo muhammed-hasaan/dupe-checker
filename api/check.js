@@ -1,30 +1,36 @@
-const express = require('express');
-const clientPromise = require('../mongodb');
+// api/check.js
+const connectToDatabase = require('../../mongodb');
 
-const app = express();
-
-// GET /api/check?number=1234567890
-app.get('/', async (req, res) => {
+module.exports = async (req, res) => {
   try {
-    const { number } = req.query;
+    // Handle both /api/check?number=123 and /api/check/123
+    const number = req.query.number || req.query[0];
+
     if (!number) {
-      return res.status(400).json({ success: false, error: "Number is required" });
+      return res.status(400).json({
+        success: false,
+        error: "Phone number is required (e.g., /api/check?number=1234567890)"
+      });
     }
 
-    const client = await clientPromise;
-    const db = client.db("dupechecker");
-    const collection = db.collection("numbers");
+    const { db } = await connectToDatabase();
+    const exists = await db.collection('numbers').findOne({ number: number });
 
-    const exists = await collection.findOne({ number });
     res.status(200).json({
       success: true,
-      exists: !!exists, // Returns true/false
-      number: exists?.number // Optional: Return the matched number if exists
+      exists: !!exists,
+      number: exists?.number,
+      message: exists
+        ? "This number already exists in our database"
+        : "This number is available"
     });
-  } catch (error) {
-    console.error("Error checking number:", error);
-    res.status(500).json({ success: false, error: "Failed to check number" });
-  }
-});
 
-module.exports = app;
+  } catch (error) {
+    console.error("Check API Error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to check number",
+      details: error.message
+    });
+  }
+};
