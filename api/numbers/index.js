@@ -70,63 +70,59 @@
 
 // module.exports = app;
 
-// /api/numbers/index.js
-const express = require('express');
-const connectToDatabase = require('../../mongodb'); // Adjust path if needed
+// api/numbers/index.js
+const clientPromise = require('../../mongodb');
 
-const app = express();
-app.use(express.json()); // Important for parsing JSON bodies
-
-// POST /api/numbers
-app.post('/', async (req, res) => {
+module.exports = async (req, res) => {
   try {
-    const { number } = req.body;
+    const client = await clientPromise;
+    const db = client.db("dupechecker");
+    const collection = db.collection("numbers");
 
-    if (!number) {
-      return res.status(400).json({ success: false, error: "Number is required" });
+    if (req.method === "GET") {
+      // Optional search ?q=123
+      const { q: query } = req.query;
+      let filter = {};
+      if (query) {
+        filter = { number: { $regex: query, $options: "i" } };
+      }
+
+      const numbers = await collection.find(filter).sort({ createdAt: -1 }).toArray();
+      return res.status(200).json({ success: true, data: numbers });
     }
 
-    const { db } = await connectToDatabase();
-    const existingNumber = await db.collection('numbers').findOne({ number });
+    if (req.method === "POST") {
+      const { number } = req.body;
+      if (!number) {
+        return res.status(400).json({ success: false, error: "Number is required" });
+      }
 
-    if (existingNumber) {
-      return res.status(409).json({ success: false, error: "Number already exists" });
+      const phoneRegex = /^\+?[\d\s\-]+$/;
+      if (!phoneRegex.test(number)) {
+        return res.status(400).json({ success: false, error: "Invalid phone number format" });
+      }
+
+      const existingNumber = await collection.findOne({ number });
+      if (existingNumber) {
+        return res.status(409).json({ success: false, error: "This number already exists" });
+      }
+
+      const result = await collection.insertOne({
+        number,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      return res.status(201).json({
+        success: true,
+        data: { _id: result.insertedId, number, createdAt: new Date() }
+      });
     }
 
-    const result = await db.collection('numbers').insertOne({
-      number,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    });
-
-    res.status(201).json({
-      success: true,
-      data: { _id: result.insertedId, number, createdAt: new Date() }
-    });
-
+    res.setHeader("Allow", ["GET", "POST"]);
+    res.status(405).end(`Method ${req.method} Not Allowed`);
   } catch (error) {
-    console.error("Error:", error);
-    res.status(500).json({ success: false, error: "Failed to add number" });
+    console.error("Error in /api/numbers:", error);
+    res.status(500).json({ success: false, error: "Server error" });
   }
-});
-
-// GET /api/numbers
-app.get('/', async (req, res) => {
-  try {
-    const { q: query } = req.query;
-    const { db } = await connectToDatabase();
-
-    const filter = query ? { number: { $regex: query, $options: "i" } } : {};
-    const numbers = await db.collection('numbers')
-      .find(filter)
-      .sort({ createdAt: -1 })
-      .toArray();
-
-    res.status(200).json({ success: true, data: numbers });
-  } catch (error) {
-    res.status(500).json({ success: false, error: "Failed to fetch numbers" });
-  }
-});
-
-module.exports = app;
-////thi difuewfbiebf
+};
