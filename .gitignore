@@ -1,0 +1,58 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Environment variables
+.env
+.env.local
+.env*.local
+.env.test
+.env.development
+.env.production
+
+# Vercel
+.vercel/
+.vercelignore
+vercel-*.log
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+logs/
+*.log
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE/Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build output
+dist/
+build/
+.next/
+out/
+
+# Testing
+coverage/
+.nyc_output/
+
+# MongoDB (if local)
+*.mongodb/
+.mongosh/
+
+# Misc
+*.zip
+*.tar.gz
+*.rar
