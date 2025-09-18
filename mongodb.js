@@ -3,7 +3,7 @@ const { MongoClient } = require('mongodb');
 
 
 const  MONGODB_URI = "mongodb+srv://dupcheck:dupcheck@cluster0.um8uqeh.mongodb.net/"
-if (MONGODB_URI) {
+if (!MONGODB_URI) {
   throw new Error('❌ MongoDB URI is missing in environment variables!');
 }
 
