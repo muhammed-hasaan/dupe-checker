@@ -130,65 +130,111 @@
 // api/numbers/index.js
 
 
+// const connectToDatabase = require('../../mongodb');
+
+// module.exports = async (req, res) => {
+//     try {
+
+//         res.setHeader("Access-Control-Allow-Origin", "*");
+//         res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+//         res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
+
+//         // MongoDB connection
+//         const { db } = await connectToDatabase();
+//         const collection = db.collection("numbers");
+
+//         if (req.method === "GET") {
+//             // Optional search ?q=123
+//             const { q: query } = req.query;
+//             let filter = {};
+//             if (query) {
+//                 filter = { number: { $regex: query, $options: "i" } };
+//             }
+
+//             const numbers = await collection.find(filter).sort({ createdAt: -1 }).toArray();
+//             return res.status(200).json({ success: true, data: numbers });
+//         }
+
+//         if (req.method === "POST") {
+//             const { number } = req.body;
+
+//             if (!number) {
+//                 return res.status(400).json({ success: false, error: "Number is required" });
+//             }
+
+//             const phoneRegex = /^\+?[\d\s\-]+$/;
+//             if (!phoneRegex.test(number)) {
+//                 return res.status(400).json({ success: false, error: "Invalid phone number format" });
+//             }
+
+//             const existingNumber = await collection.findOne({ number });
+//             if (existingNumber) {
+//                 return res.status(409).json({ success: false, error: "This number already exists" });
+//             }
+
+//             const result = await collection.insertOne({
+//                 number,
+//                 createdAt: new Date(),
+//                 updatedAt: new Date()
+//             });
+
+//             return res.status(201).json({
+//                 success: true,
+//                 data: { _id: result.insertedId, number, createdAt: new Date() }
+//             });
+//         }
+
+//         // Handle unsupported methods
+//         res.setHeader("Allow", ["GET", "POST"]);
+//         res.status(405).end(`Method ${req.method} Not Allowed`);
+//     } catch (error) {
+//         console.error("Error in /api/numbers:", error);
+//         res.status(500).json({ success: false, error: "Server error", details: error.message });
+//     }
+// };
+
 const connectToDatabase = require('../../mongodb');
 
 module.exports = async (req, res) => {
-    try {
+  try {
+    // 🔹 CORS headers
+    res.setHeader("Access-Control-Allow-Origin", "*"); // production me domain restrict karo
+    res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
 
-        res.setHeader("Access-Control-Allow-Origin", "*");
-        res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-        res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
+    // 🔹 Preflight request
+    if (req.method === "OPTIONS") return res.status(200).end();
 
-        // MongoDB connection
-        const { db } = await connectToDatabase();
-        const collection = db.collection("numbers");
+    const { db } = await connectToDatabase();
+    const collection = db.collection("numbers");
 
-        if (req.method === "GET") {
-            // Optional search ?q=123
-            const { q: query } = req.query;
-            let filter = {};
-            if (query) {
-                filter = { number: { $regex: query, $options: "i" } };
-            }
-
-            const numbers = await collection.find(filter).sort({ createdAt: -1 }).toArray();
-            return res.status(200).json({ success: true, data: numbers });
-        }
-
-        if (req.method === "POST") {
-            const { number } = req.body;
-
-            if (!number) {
-                return res.status(400).json({ success: false, error: "Number is required" });
-            }
-
-            const phoneRegex = /^\+?[\d\s\-]+$/;
-            if (!phoneRegex.test(number)) {
-                return res.status(400).json({ success: false, error: "Invalid phone number format" });
-            }
-
-            const existingNumber = await collection.findOne({ number });
-            if (existingNumber) {
-                return res.status(409).json({ success: false, error: "This number already exists" });
-            }
-
-            const result = await collection.insertOne({
-                number,
-                createdAt: new Date(),
-                updatedAt: new Date()
-            });
-
-            return res.status(201).json({
-                success: true,
-                data: { _id: result.insertedId, number, createdAt: new Date() }
-            });
-        }
-
-        // Handle unsupported methods
-        res.setHeader("Allow", ["GET", "POST"]);
-        res.status(405).end(`Method ${req.method} Not Allowed`);
-    } catch (error) {
-        console.error("Error in /api/numbers:", error);
-        res.status(500).json({ success: false, error: "Server error", details: error.message });
+    if (req.method === "GET") {
+      const { q: query } = req.query;
+      let filter = {};
+      if (query) filter = { number: { $regex: query, $options: "i" } };
+      const numbers = await collection.find(filter).sort({ createdAt: -1 }).toArray();
+      return res.status(200).json({ success: true, data: numbers });
     }
+
+    if (req.method === "POST") {
+      const { number } = req.body;
+      if (!number) return res.status(400).json({ success: false, error: "Number is required" });
+
+      const phoneRegex = /^\+?[\d\s\-]+$/;
+      if (!phoneRegex.test(number)) return res.status(400).json({ success: false, error: "Invalid number format" });
+
+      const existing = await collection.findOne({ number });
+      if (existing) return res.status(409).json({ success: false, error: "Number exists" });
+
+      const result = await collection.insertOne({ number, createdAt: new Date(), updatedAt: new Date() });
+      return res.status(201).json({ success: true, data: { _id: result.insertedId, number } });
+    }
+
+    res.setHeader("Allow", ["GET", "POST"]);
+    res.status(405).end(`Method ${req.method} Not Allowed`);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: "Server error", details: err.message });
+  }
 };
